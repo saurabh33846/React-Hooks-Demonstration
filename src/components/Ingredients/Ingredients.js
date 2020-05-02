@@ -1,4 +1,4 @@
-import React,{useState, useEffect}from 'react';
+import React,{useState, useEffect, useCallback}from 'react';
 
 import IngredientForm from './IngredientForm';
 import Search from './Search';
@@ -7,24 +7,26 @@ import IngredientList from './IngredientList';
 function Ingredients() {
   const [userIngredients, setUserIngredients] = useState([]);
 
-  useEffect(()=>{
-    fetch('https://react-hooks-example-19ae6.firebaseio.com/ingredeint.json').
-    then((response)=>{
-      return response.json()
-    }).
-    then((jsonData)=>{
-      const aIngredeints = [];
-      for(const key in jsonData){
-        aIngredeints.push({
-          id:key,
-          title:jsonData[key].title,
-          amount:jsonData[key].amount
-        })
-      }
-      setUserIngredients(aIngredeints);
-    })
+  // useEffect(()=>{
+  //   fetch('https://react-hooks-example-19ae6.firebaseio.com/ingredeint.json').
+  //   then((response)=>{
+  //     return response.json()
+  //   }).
+  //   then((jsonData)=>{
+  //     const aIngredeints = [];
+  //     for(const key in jsonData){
+  //       aIngredeints.push({
+  //         id:key,
+  //         title:jsonData[key].title,
+  //         amount:jsonData[key].amount
+  //       })
+  //     }
+  //     setUserIngredients(aIngredeints);
+  //   })
+  // },[]);
+  const filteredIngredientHandler = useCallback (filteredIngredients =>{
+    setUserIngredients(filteredIngredients)
   },[]);
-
   const addIngredientHandler = (ingredient) =>{
     fetch('https://react-hooks-example-19ae6.firebaseio.com/ingredeint.json',{
       method: 'POST', 
@@ -47,7 +49,7 @@ function Ingredients() {
       <IngredientForm onAddIngredient = {addIngredientHandler}/>
 
       <section>
-        <Search />
+        <Search onLoadingIngredients ={filteredIngredientHandler} />
         {/* Need to add list here! */}
         <IngredientList ingredients={userIngredients} onRemoveItem={()=>{}}></IngredientList>
       </section>
