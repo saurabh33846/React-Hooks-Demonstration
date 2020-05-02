@@ -6,7 +6,25 @@ import IngredientList from './IngredientList';
 
 function Ingredients() {
   const [userIngredients, setUserIngredients] = useState([]);
-  useEffect();
+
+  useEffect(()=>{
+    fetch('https://react-hooks-example-19ae6.firebaseio.com/ingredeint.json').
+    then((response)=>{
+      return response.json()
+    }).
+    then((jsonData)=>{
+      const aIngredeints = [];
+      for(const key in jsonData){
+        aIngredeints.push({
+          id:key,
+          title:jsonData[key].title,
+          amount:jsonData[key].amount
+        })
+      }
+      setUserIngredients(aIngredeints);
+    })
+  },[]);
+
   const addIngredientHandler = (ingredient) =>{
     fetch('https://react-hooks-example-19ae6.firebaseio.com/ingredeint.json',{
       method: 'POST', 
