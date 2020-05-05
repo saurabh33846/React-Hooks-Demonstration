@@ -1,34 +1,34 @@
-import React,{useState, useEffect, useCallback}from 'react';
+import React,{useState, useEffect, useCallback, useReducer}from 'react';
 
 import IngredientForm from './IngredientForm';
 import Search from './Search';
 import IngredientList from './IngredientList';
 import ErrorModal from '../UI/ErrorModal';
 
+const ingredientReducer = (currentIngredients, action)=>{
+  switch(action.type){
+    case 'SET':
+      return action.ingredients;
+    case 'ADD':
+      return [...currentIngredients, action.ingredient]
+    case 'DELETE':
+      return currentIngredients.filter((ing)=>{
+        return ing.id!== action.id;
+      })
+    default:
+      throw new Error("Should not come here");
+  }
+}
+
 function Ingredients() {
-  const [userIngredients, setUserIngredients] = useState([]);
+  const [userIngredients, dispatch]=useReducer(ingredientReducer,[]);
+  // const [userIngredients, setUserIngredients] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState();
 
-  // useEffect(()=>{
-  //   fetch('https://react-hooks-example-19ae6.firebaseio.com/ingredeint.json').
-  //   then((response)=>{
-  //     return response.json()
-  //   }).
-  //   then((jsonData)=>{
-  //     const aIngredeints = [];
-  //     for(const key in jsonData){
-  //       aIngredeints.push({
-  //         id:key,
-  //         title:jsonData[key].title,
-  //         amount:jsonData[key].amount
-  //       })
-  //     }
-  //     setUserIngredients(aIngredeints);
-  //   })
-  // },[]);
   const filteredIngredientHandler = useCallback (filteredIngredients =>{
-    setUserIngredients(filteredIngredients)
+    // setUserIngredients(filteredIngredients)
+    dispatch({type:'SET',ingredients:filteredIngredients});
   },[]);
   const addIngredientHandler = (ingredient) =>{
     setIsLoading(true);
@@ -42,10 +42,11 @@ function Ingredients() {
       body: JSON.stringify(ingredient)
     }).then((response)=>{
       console.log(response);
-      setUserIngredients((prevIngredients)=>{
-        setIsLoading(false);
-        return [...prevIngredients, {...ingredient, id:Math.random().toString()}]
-      })
+      setIsLoading(false);
+      dispatch({type:"ADD",ingredient:{...ingredient, id:response.name}})
+      // setUserIngredients((prevIngredients)=>{
+      //   return [...prevIngredients, {...ingredient, id:Math.random().toString()}]
+      // })
     }).catch((err)=>{
       setError('Something went wrong');
     })
@@ -61,11 +62,12 @@ function Ingredients() {
       }
     }).then(()=>{
       setIsLoading(false);
-      setUserIngredients((prevIngredients)=>{
-        return prevIngredients.filter((pervIng)=>{
-          return ingredientId!== pervIng.id
-        })
-      })
+      dispatch({type:"DELETE",id:ingredientId})
+      // setUserIngredients((prevIngredients)=>{
+      //   return prevIngredients.filter((pervIng)=>{
+      //     return ingredientId!== pervIng.id
+      //   })
+      // })
     }).catch((err)=>{
       setError('Something went wrong');
     })
