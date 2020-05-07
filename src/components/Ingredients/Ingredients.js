@@ -1,4 +1,4 @@
-import React,{useState, useEffect, useCallback, useReducer}from 'react';
+import React,{useState, useEffect, useMemo, useCallback, useReducer}from 'react';
 
 import IngredientForm from './IngredientForm';
 import Search from './Search';
@@ -35,13 +35,15 @@ const httpReducer = (httpState, action)=>{
 }
 
 function Ingredients() {
+  
   const [userIngredients, dispatch]=useReducer(ingredientReducer,[]);
   const [httpState, dispatchHttp] = useReducer(httpReducer, {loading:false, error:null});
 
   const filteredIngredientHandler = useCallback (filteredIngredients =>{
     dispatch({type:'SET',ingredients:filteredIngredients});
   },[]);
-  const addIngredientHandler = (ingredient) =>{
+
+  const addIngredientHandler = useCallback((ingredient) =>{
     dispatchHttp({type:'SEND'})
     fetch('https://react-hooks-example-19ae6.firebaseio.com/ingredeint.json',{
       method: 'POST', 
@@ -62,8 +64,8 @@ function Ingredients() {
       })
     })
 
-  }
-  const removeIngredientHanlder = (ingredientId)=>{
+  },[]);
+  const removeIngredientHanlder = useCallback((ingredientId)=>{
     dispatchHttp({type:'SEND'});
     fetch(`https://react-hooks-example-19ae6.firebaseio.com/ingredeint/${ingredientId}.json`,{
       method: 'DELETE', 
@@ -82,10 +84,16 @@ function Ingredients() {
       
     })
 
-  }
-  const clearError = ()=>{
+  },[])
+  const ingredientList = useMemo(()=>{
+    return(
+    <IngredientList ingredients={userIngredients} onRemoveItem={removeIngredientHanlder}>
+    </IngredientList>
+    )
+  },[userIngredients, removeIngredientHanlder])
+  const clearError = useCallback(()=>{
     dispatchHttp({type:'CLEAR'})
-  }
+  },[])
 
   return (
     <div className="App">
@@ -95,7 +103,7 @@ function Ingredients() {
       <section>
         <Search onLoadingIngredients ={filteredIngredientHandler} />
         {/* Need to add list here! */}
-        <IngredientList ingredients={userIngredients} onRemoveItem={removeIngredientHanlder} ></IngredientList>
+        {ingredientList}
       </section>
     </div>
   );
