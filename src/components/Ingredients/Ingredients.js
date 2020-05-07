@@ -19,19 +19,30 @@ const ingredientReducer = (currentIngredients, action)=>{
       throw new Error("Should not come here");
   }
 }
+const httpReducer = (httpState, action)=>{
+  switch(action.type){
+    case 'SEND':
+      return {loading:true, error:null};
+    case 'RESPONSE':
+      return {...httpState ,loading:false}
+    case 'ERROR':
+      return {loading:false, error:action.error};
+    case 'CLEAR':
+      return {...httpState, error:null}
+    default:
+      throw new Error('Should not reeached');
+  }
+}
 
 function Ingredients() {
   const [userIngredients, dispatch]=useReducer(ingredientReducer,[]);
-  // const [userIngredients, setUserIngredients] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState();
+  const [httpState, dispatchHttp] = useReducer(httpReducer, {loading:false, error:null});
 
   const filteredIngredientHandler = useCallback (filteredIngredients =>{
-    // setUserIngredients(filteredIngredients)
     dispatch({type:'SET',ingredients:filteredIngredients});
   },[]);
   const addIngredientHandler = (ingredient) =>{
-    setIsLoading(true);
+    dispatchHttp({type:'SEND'})
     fetch('https://react-hooks-example-19ae6.firebaseio.com/ingredeint.json',{
       method: 'POST', 
       headers: {
@@ -42,18 +53,18 @@ function Ingredients() {
       body: JSON.stringify(ingredient)
     }).then((response)=>{
       console.log(response);
-      setIsLoading(false);
+      dispatchHttp({type:'RESPONSE'})
       dispatch({type:"ADD",ingredient:{...ingredient, id:response.name}})
-      // setUserIngredients((prevIngredients)=>{
-      //   return [...prevIngredients, {...ingredient, id:Math.random().toString()}]
-      // })
     }).catch((err)=>{
-      setError('Something went wrong');
+      dispatchHttp({
+        type:'ERROR',
+        error:'something went wrong'
+      })
     })
 
   }
   const removeIngredientHanlder = (ingredientId)=>{
-    setIsLoading(true);
+    dispatchHttp({type:'SEND'});
     fetch(`https://react-hooks-example-19ae6.firebaseio.com/ingredeint/${ingredientId}.json`,{
       method: 'DELETE', 
       headers: {
@@ -61,30 +72,25 @@ function Ingredients() {
         // 'Content-Type': 'application/x-www-form-urlencoded',
       }
     }).then(()=>{
-      setIsLoading(false);
-      dispatch({type:"DELETE",id:ingredientId})
-      // setUserIngredients((prevIngredients)=>{
-      //   return prevIngredients.filter((pervIng)=>{
-      //     return ingredientId!== pervIng.id
-      //   })
-      // })
+      dispatchHttp({type:'RESPONSE'});
+      dispatch({type:"DELETE",id:ingredientId});
     }).catch((err)=>{
-      setError('Something went wrong');
+      dispatchHttp({
+        type:'ERROR',
+        error:'Something went wrong'
+      })
+      
     })
 
   }
   const clearError = ()=>{
-    /** React batches sync setState, means if below we are setting 2 stataes sync then react 
-     * will group them together and update state and only 1 rerender cycle will happe not 2.
-     */
-    setError(null);
-    setIsLoading(false);
+    dispatchHttp({type:'CLEAR'})
   }
 
   return (
     <div className="App">
-      {error? <ErrorModal onClose = {clearError}>{error}</ErrorModal>:null}
-      <IngredientForm onAddIngredient = {addIngredientHandler} loading = {isLoading}/>
+      {httpState.error? <ErrorModal onClose = {clearError}>{httpState.error}</ErrorModal>:null}
+      <IngredientForm onAddIngredient = {addIngredientHandler} loading = {httpState.loading}/>
 
       <section>
         <Search onLoadingIngredients ={filteredIngredientHandler} />
