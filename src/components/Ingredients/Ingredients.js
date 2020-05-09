@@ -25,7 +25,7 @@ const ingredientReducer = (currentIngredients, action)=>{
 function Ingredients() {
   
   const [userIngredients, dispatch]=useReducer(ingredientReducer,[]);
-  const {isLoaing, error,data, sendRequest, reqExtra, reqIdentifier} = useHttp()
+  const {isLoaing, error,data, sendRequest, reqExtra, reqIdentifier, clear} = useHttp()
 
   const filteredIngredientHandler = useCallback (filteredIngredients =>{
     dispatch({type:'SET',ingredients:filteredIngredients});
@@ -64,7 +64,7 @@ function Ingredients() {
     )
   },[userIngredients, removeIngredientHanlder])
   const clearError = useCallback(()=>{
-    // dispatchHttp({type:'CLEAR'})
+    clear();
   },[])
 
   return (
